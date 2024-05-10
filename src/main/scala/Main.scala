@@ -10,6 +10,7 @@ object Main extends JFXApp3 {
   val width = 100  
   val height = 100 
   val pixel_size = 5
+  val sand_radius = 6
 
   val grid = Grid.empty(width, height)
   val random = new Random()
@@ -19,13 +20,11 @@ object Main extends JFXApp3 {
     val gc = canvas.graphicsContext2D
 
     stage = new JFXApp3.PrimaryStage {
-      title.value = "Falling Sand Simulator"
+      title.value = "falling_sand"
       scene = new Scene {
         content = canvas
 
         onMouseMoved = (me: MouseEvent) => {
-          val hover_radius = 2
-
           val hover_canvas = new Canvas(Main.width * pixel_size, Main.height * pixel_size)
           val hover_gc = hover_canvas.graphicsContext2D
           hover_gc.globalAlpha = 0.5 // opacity
@@ -38,7 +37,7 @@ object Main extends JFXApp3 {
 
           def drawHover(x: Int, y: Int): Unit = {
             hover_gc.clearRect(0, 0, Main.width * pixel_size, Main.height * pixel_size)
-            for (dx <- -hover_radius to hover_radius; dy <- -hover_radius to hover_radius if dx * dx + dy * dy <= hover_radius * hover_radius) {
+            for (dx <- -sand_radius to sand_radius; dy <- -sand_radius to sand_radius if dx * dx + dy * dy <= sand_radius * sand_radius) {
               val nx = x + dx
               val ny = y + dy
               if (nx >= 0 && nx < Main.width && ny >= 0 && ny < Main.height) {
@@ -80,19 +79,22 @@ object Main extends JFXApp3 {
   }
 
   def updateGrid(): Unit = {
-    for (y <- 0 until height; x <- 0 until width) {
-      grid.cells(y)(x) match {
-        case Some(particle) =>
-          val newParticle = particle.update(grid)
-          grid.updateParticle(particle, newParticle)
-        case None => 
+      grid.buffer_reset() 
+
+      for (y <- 0 until height; x <- 0 until width) {
+        grid.cells(y)(x) match {
+          case Some(particle) if !grid.buffer.contains(particle) =>
+            val new_particle = particle.update(grid)
+            grid.updateParticle(particle, new_particle)
+
+          case _ => 
+        }
       }
     }
-  }
+
 
   def createSand(x: Int, y: Int): Unit = {
-    val radius = 2 
-    for (dx <- -radius to radius; dy <- -radius to radius if dx * dx + dy * dy <= radius * radius) {
+    for (dx <- -sand_radius to sand_radius; dy <- -sand_radius to sand_radius if dx * dx + dy * dy <= sand_radius * sand_radius) {
       val nx = x + dx
       val ny = y + dy
       if (nx >= 0 && nx < width && ny >= 0 && ny < height && grid.cells(ny)(nx).isEmpty) {
