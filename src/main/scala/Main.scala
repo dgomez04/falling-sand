@@ -23,6 +23,34 @@ object Main extends JFXApp3 {
       scene = new Scene {
         content = canvas
 
+        onMouseMoved = (me: MouseEvent) => {
+          val hover_radius = 2
+
+          val hover_canvas = new Canvas(Main.width * pixel_size, Main.height * pixel_size)
+          val hover_gc = hover_canvas.graphicsContext2D
+          hover_gc.globalAlpha = 0.5 // opacity
+
+          onMouseMoved = (me: MouseEvent) => {
+            val x = (me.x / pixel_size).toInt
+            val y = (me.y / pixel_size).toInt
+            drawHover(x, y)
+          }
+
+          def drawHover(x: Int, y: Int): Unit = {
+            hover_gc.clearRect(0, 0, Main.width * pixel_size, Main.height * pixel_size)
+            for (dx <- -hover_radius to hover_radius; dy <- -hover_radius to hover_radius if dx * dx + dy * dy <= hover_radius * hover_radius) {
+              val nx = x + dx
+              val ny = y + dy
+              if (nx >= 0 && nx < Main.width && ny >= 0 && ny < Main.height) {
+                hover_gc.fill = Color.Gray
+                hover_gc.fillRect(nx * pixel_size, ny * pixel_size, pixel_size, pixel_size)
+              }
+            }
+          }
+
+          content += hover_canvas
+        }
+
         onMouseClicked = (me: MouseEvent) => {
           val x = (me.x / pixel_size).toInt
           val y = (me.y / pixel_size).toInt
